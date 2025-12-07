@@ -113,8 +113,9 @@ class MCTSNode:
             self.parent.children.append(self)
 
     def UCB(self):
+        # 未访问的节点应优先被探索，返回 +inf 促使选择
         if self.N == 0:
-            return float('-inf')
+            return float('inf')
         return self.Q / self.N + np.sqrt(np.log(self.parent.N) / self.N)
 
     def __str__(self):
@@ -222,7 +223,10 @@ def treePolicy(root):
         if allExpanded:
             node = getBestChild(node)
         else:
-            return child
+            # 返回第一个未展开的子节点
+            for child in node.children:
+                if not child.expanded:
+                    return child
 
 
 def backward(node, value):
