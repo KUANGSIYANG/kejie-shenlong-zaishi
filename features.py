@@ -1,4 +1,4 @@
-# Stone colour            3 Player stones; oppo. stones; empty
+ # Stone colour            3 Player stones; oppo. stones; empty
 # Ones                    1 Constant plane
 # Turns since last move   8 How many turns since a move played
 # Liberties               8 Number of liberties

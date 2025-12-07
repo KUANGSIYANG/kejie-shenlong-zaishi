@@ -55,6 +55,8 @@ def prepareValueSgfFile(fileName):
     sequence = game.get_main_sequence()
 
     winnerChar = game.get_winner()
+    if winnerChar is None:
+        raise Exception('No winner information')
     winner = colorCharToIndex[winnerChar]
 
     validSequence = []
@@ -118,8 +120,8 @@ def preparePolicyData(fileCount):
     torch.save((ansInputData, ansPolicyOutput), 'policyData.pt')
 
 
-def prepareValueData(fileCount):
-    with open('jgdb/allValid.txt', 'r') as allValidFile:
+def prepareValueData(fileCount, dataFile='games/allValid.txt'):
+    with open(dataFile, 'r') as allValidFile:
         allValidLines = allValidFile.readlines()
 
     allValueInputData = []
@@ -134,8 +136,8 @@ def prepareValueData(fileCount):
 
         except KeyboardInterrupt:
             exit()
-        except Exception:
-            print('Error: ' + sgfFile)
+        except Exception as e:
+            print('Error: ' + sgfFile + ' - ' + str(e))
 
     allValueInputData = torch.cat(allValueInputData)
     allValueOutput = torch.cat(allValueOutput)

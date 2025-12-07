@@ -113,9 +113,11 @@ class MCTSNode:
             self.parent.children.append(self)
 
     def UCB(self):
+        # 优先探索未访问节点
         if self.N == 0:
-            return float('-inf')
-        return self.Q / self.N + np.sqrt(np.log(self.parent.N) / self.N)
+            return float('inf')
+        # 简单UCB公式（可进一步替换为PUCT）
+        return self.Q / self.N + np.sqrt(np.log(max(self.parent.N, 1)) / self.N)
 
     def __str__(self):
         x, y = self.go.history[-1]
@@ -187,9 +189,10 @@ def searchChildren(node):
     count = 0
     nextColor = -nodeWillPlayColor
 
-    if predict[361].exp().item() > 0.5:
-        print('pass')
-        return
+    # 如果pass概率很高，这里不直接输出，仍继续扩展/评估
+    # 若需要，可在此跳过pass候选
+    # if predict[361].exp().item() > 0.5:
+    #     return
 
     for predictIndex in predictReverseSortIndex:
         x, y = toPosition(predictIndex)
@@ -210,19 +213,18 @@ def searchChildren(node):
 def treePolicy(root):
     node = root
     while True:
+        # 若无子节点，先扩展再返回自己进行默认策略
         if len(node.children) == 0:
             return node
 
-        allExpanded = True
-        for child in node.children:
-            if not child.expanded:
-                allExpanded = False
-                break
+        # 找到第一个未扩展的子节点
+        unexpanded = [c for c in node.children if not c.expanded]
+        if unexpanded:
+            # 返回一个未扩展的子节点
+            return unexpanded[0]
 
-        if allExpanded:
-            node = getBestChild(node)
-        else:
-            return child
+        # 若都已扩展，则选择UCB最大的继续向下
+        node = getBestChild(node)
 
 
 def backward(node, value):
