@@ -19,6 +19,7 @@ export const useGameStore = defineStore('game', {
     isConnected: false,
     isThinking: false,
     gameStarted: false,
+    statusText: null, // 状态提示文本（如"思考中..."）
     
     // 历史记录
     moveHistory: [],
@@ -170,34 +171,59 @@ export const useGameStore = defineStore('game', {
 
         // 如果本次落子成功且是人机对弈模式，则在思考结束后触发AI走子
         if (moveSucceeded && this.mode === 'vsAI') {
-          setTimeout(() => this.genAIMove(), 500)
+          // 延迟800ms确保isThinking已重置
+          setTimeout(() => {
+            if (!this.isThinking && this.isConnected && this.mode === 'vsAI') {
+              console.log('[Game Store] 触发AI走子')
+              this.genAIMove()
+            }
+          }, 800)
         }
       }
     },
 
     /**
-     * AI生成走子
+     * AI生成走子（修复MCTS）
      */
     async genAIMove() {
-      if (this.isThinking) return
+      if (this.isThinking || !this.isConnected) {
+        console.warn('[Game Store] genAIMove跳过: isThinking=', this.isThinking, 'isConnected=', this.isConnected)
+        return
+      }
       
       const colorChar = this.currentPlayer === 1 ? 'B' : 'W'
+      const thinkingMode = this.aiMode === 'mcts' ? 'MCTS思考中（可能需要较长时间）...' : 'AI思考中...'
       
       try {
         this.isThinking = true
+        this.statusText = thinkingMode
         this.error = null
         
+        console.log(`[Game Store] 发送genmove命令: ${colorChar}, mode=${this.aiMode}`)
         const response = await gtpClient.genmove(colorChar)
         
+        console.log(`[Game Store] genmove响应:`, response)
+        
         if (response.success && response.data) {
-          const position = response.data.trim()
+          const position = response.data.trim().toUpperCase()
           
           if (position.toLowerCase() === 'pass') {
-            // AI选择pass
+            console.log('[Game Store] AI选择pass')
             this.currentPlayer = -this.currentPlayer
           } else {
-            // 解析位置并更新棋盘
+            // 解析位置
             const { x, y } = this.gtpToCoord(position)
+            console.log(`[Game Store] AI走子位置: ${position} -> (${x}, ${y})`)
+            
+            // 验证坐标
+            if (x < 0 || x >= 19 || y < 0 || y >= 19) {
+              throw new Error(`AI返回了无效位置: ${position} -> (${x}, ${y})`)
+            }
+            
+            // 立即更新本地棋盘（确保响应性）
+            this.board[x][y] = this.currentPlayer
+            
+            // 刷新棋盘状态
             await this.updateBoard()
             
             // 记录历史
@@ -209,12 +235,15 @@ export const useGameStore = defineStore('game', {
             // 更新评估数据
             this.updateEvaluation()
           }
+        } else {
+          throw new Error(response.error || 'AI走子失败')
         }
       } catch (error) {
-        this.error = error.message
-        console.error('AI走子失败:', error)
+        this.error = error.message || 'AI走子失败'
+        console.error('[Game Store] AI走子失败:', error)
       } finally {
         this.isThinking = false
+        this.statusText = null
       }
     },
 
@@ -308,29 +337,49 @@ export const useGameStore = defineStore('game', {
      * 获取AI建议（前N个最佳走子）
      */
     async getAISuggestions(count = 5) {
-      if (!this.isConnected || this.isThinking) {
+      if (!this.isConnected) {
         this.aiSuggestions = []
+        this.showSuggestions = false
         return []
       }
       
       try {
-        this.isThinking = true
         const colorChar = this.currentPlayer === 1 ? 'B' : 'W'
+        console.log(`[Game Store] 请求AI建议: color=${colorChar}, count=${count}`)
         const response = await gtpClient.getSuggestions(colorChar, count)
         
-        if (response.success && response.data) {
-          this.aiSuggestions = response.data
-          return response.data
+        console.log(`[Game Store] AI建议响应:`, response)
+        
+        if (response.success && response.data && Array.isArray(response.data)) {
+          // 验证并格式化建议数据
+          const validSuggestions = response.data
+            .filter(s => s && typeof s === 'object' && 'x' in s && 'y' in s)
+            .map(s => ({
+              x: parseInt(s.x, 10),
+              y: parseInt(s.y, 10),
+              score: parseFloat(s.score || 0),
+              color: parseInt(s.color || this.currentPlayer, 10)
+            }))
+            .filter(s => !isNaN(s.x) && !isNaN(s.y) && s.x >= 0 && s.x < 19 && s.y >= 0 && s.y < 19)
+          
+          console.log(`[Game Store] 有效建议数量: ${validSuggestions.length}`, validSuggestions)
+          
+          // 创建新数组确保Vue响应式更新
+          this.aiSuggestions = [...validSuggestions]
+          this.showSuggestions = validSuggestions.length > 0
+          
+          return validSuggestions
         } else {
+          console.warn('[Game Store] AI建议响应无效:', response)
           this.aiSuggestions = []
+          this.showSuggestions = false
           return []
         }
       } catch (error) {
-        console.error('获取AI建议失败:', error)
+        console.error('[Game Store] 获取AI建议失败:', error)
         this.aiSuggestions = []
+        this.showSuggestions = false
         return []
-      } finally {
-        this.isThinking = false
       }
     },
 
@@ -371,4 +420,50 @@ export const useGameStore = defineStore('game', {
     }
   }
 })
+          return []
+        }
+      } catch (error) {
+        console.error('[Game Store] 获取AI建议失败:', error)
+        this.aiSuggestions = []
+        this.showSuggestions = false
+        return []
+      }
+    },
 
+    /**
+     * 更新评估数据
+     */
+    updateEvaluation() {
+      // 统计棋子数
+      let blackStones = 0
+      let whiteStones = 0
+      
+      for (let i = 0; i < 19; i++) {
+        for (let j = 0; j < 19; j++) {
+          if (this.board[i][j] === 1) blackStones++
+          else if (this.board[i][j] === -1) whiteStones++
+        }
+      }
+      
+      this.evaluation = {
+        blackScore: blackStones,
+        whiteScore: whiteStones,
+        blackStones,
+        whiteStones,
+        territory: { black: 0, white: 0 } // 需要更复杂的算法计算领地
+      }
+    },
+
+    /**
+     * 关闭游戏
+     */
+    async quit() {
+      if (this.isConnected) {
+        await gtpClient.quit()
+      }
+      this.isConnected = false
+      this.gameStarted = false
+      this.isThinking = false
+    }
+  }
+})

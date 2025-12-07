@@ -49,6 +49,22 @@
         <span>白: {{ evaluation.whiteStones }}</span>
       </div>
     </div>
+    
+    <!-- AI建议列表 -->
+    <div class="suggestions-section" v-if="showSuggestions && aiSuggestions.length > 0">
+      <div class="suggestions-header">AI建议</div>
+      <div class="suggestions-list">
+        <div
+          v-for="(suggestion, index) in aiSuggestions"
+          :key="`${suggestion.x}-${suggestion.y}`"
+          class="suggestion-item"
+        >
+          <span class="suggestion-rank">#{{ index + 1 }}</span>
+          <span class="suggestion-position">{{ coordToGTP(suggestion.x, suggestion.y) }}</span>
+          <span class="suggestion-score">{{ (suggestion.score * 100).toFixed(1) }}%</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -61,6 +77,16 @@ const gameStore = useGameStore()
 const evaluation = computed(() => gameStore.evaluation)
 const moveHistory = computed(() => gameStore.moveHistory)
 const currentPlayer = computed(() => gameStore.currentPlayer)
+const aiSuggestions = computed(() => gameStore.aiSuggestions)
+const showSuggestions = computed(() => gameStore.showSuggestions)
+
+// 坐标转换为GTP格式
+const coordToGTP = (x, y) => {
+  const letters = 'ABCDEFGHJKLMNOPQRST'
+  const row = 19 - x
+  const col = letters[y]
+  return `${col}${row}`
+}
 
 const totalStones = computed(() => {
   return evaluation.value.blackStones + evaluation.value.whiteStones || 1
@@ -190,6 +216,481 @@ const getDiffClass = () => {
   margin-top: 4px;
   font-size: 11px;
   color: #666;
+}
+
+.suggestions-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.suggestions-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 200, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.suggestion-rank {
+  font-weight: bold;
+  color: rgba(0, 150, 0, 0.9);
+  min-width: 20px;
+}
+
+.suggestion-position {
+  flex: 1;
+  color: #333;
+  font-family: monospace;
+}
+
+.suggestion-score {
+  color: #666;
+  font-weight: 500;
+}
+</style>
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.progress-fill.black {
+  background: linear-gradient(90deg, #333, #555);
+}
+
+.progress-fill.white {
+  background: linear-gradient(90deg, #ddd, #fff);
+  border-left: 1px solid #ccc;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.suggestions-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.suggestions-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 200, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.suggestion-rank {
+  font-weight: bold;
+  color: rgba(0, 150, 0, 0.9);
+  min-width: 20px;
+}
+
+.suggestion-position {
+  flex: 1;
+  color: #333;
+  font-family: monospace;
+}
+
+.suggestion-score {
+  color: #666;
+  font-weight: 500;
+}
+</style>
+
+
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.progress-fill.black {
+  background: linear-gradient(90deg, #333, #555);
+}
+
+.progress-fill.white {
+  background: linear-gradient(90deg, #ddd, #fff);
+  border-left: 1px solid #ccc;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.suggestions-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.suggestions-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 200, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.suggestion-rank {
+  font-weight: bold;
+  color: rgba(0, 150, 0, 0.9);
+  min-width: 20px;
+}
+
+.suggestion-position {
+  flex: 1;
+  color: #333;
+  font-family: monospace;
+}
+
+.suggestion-score {
+  color: #666;
+  font-weight: 500;
+}
+</style>
+
+
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.progress-fill.black {
+  background: linear-gradient(90deg, #333, #555);
+}
+
+.progress-fill.white {
+  background: linear-gradient(90deg, #ddd, #fff);
+  border-left: 1px solid #ccc;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.suggestions-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.suggestions-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 200, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.suggestion-rank {
+  font-weight: bold;
+  color: rgba(0, 150, 0, 0.9);
+  min-width: 20px;
+}
+
+.suggestion-position {
+  flex: 1;
+  color: #333;
+  font-family: monospace;
+}
+
+.suggestion-score {
+  color: #666;
+  font-weight: 500;
+}
+</style>
+
+
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.progress-fill.black {
+  background: linear-gradient(90deg, #333, #555);
+}
+
+.progress-fill.white {
+  background: linear-gradient(90deg, #ddd, #fff);
+  border-left: 1px solid #ccc;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.suggestions-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.suggestions-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 200, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.suggestion-rank {
+  font-weight: bold;
+  color: rgba(0, 150, 0, 0.9);
+  min-width: 20px;
+}
+
+.suggestion-position {
+  flex: 1;
+  color: #333;
+  font-family: monospace;
+}
+
+.suggestion-score {
+  color: #666;
+  font-weight: 500;
+}
+</style>
+
+
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.progress-fill.black {
+  background: linear-gradient(90deg, #333, #555);
+}
+
+.progress-fill.white {
+  background: linear-gradient(90deg, #ddd, #fff);
+  border-left: 1px solid #ccc;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.suggestions-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.suggestions-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 200, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.suggestion-rank {
+  font-weight: bold;
+  color: rgba(0, 150, 0, 0.9);
+  min-width: 20px;
+}
+
+.suggestion-position {
+  flex: 1;
+  color: #333;
+  font-family: monospace;
+}
+
+.suggestion-score {
+  color: #666;
+  font-weight: 500;
+}
+</style>
+
+
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.progress-fill.black {
+  background: linear-gradient(90deg, #333, #555);
+}
+
+.progress-fill.white {
+  background: linear-gradient(90deg, #ddd, #fff);
+  border-left: 1px solid #ccc;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.suggestions-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+}
+
+.suggestions-header {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(0, 200, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  gap: 8px;
+}
+
+.suggestion-rank {
+  font-weight: bold;
+  color: rgba(0, 150, 0, 0.9);
+  min-width: 20px;
+}
+
+.suggestion-position {
+  flex: 1;
+  color: #333;
+  font-family: monospace;
+}
+
+.suggestion-score {
+  color: #666;
+  font-weight: 500;
 }
 </style>
 

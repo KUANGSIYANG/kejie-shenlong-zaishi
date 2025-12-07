@@ -3,7 +3,7 @@
     <div class="goban" :style="boardStyle" ref="gobanRef">
       <!-- 棋盘背景 -->
       <svg class="board-bg" :width="boardSize" :height="boardSize">
-        <!-- 棋盘线 -->
+        <!-- 棋盘�?-->
         <g v-for="i in 19" :key="`line-${i}`">
           <!-- 横线 -->
           <line
@@ -36,7 +36,7 @@
         />
       </svg>
       
-      <!-- 棋子层 -->
+      <!-- 棋子�?-->
       <div class="stones-layer">
         <div
           v-for="(row, x) in board"
@@ -59,27 +59,30 @@
             >
             </div>
             
-            <!-- 悬停指示器 -->
+            <!-- 悬停指示�?-->
             <div
               v-if="cell === 0 && hoveredCell?.x === x && hoveredCell?.y === y && canPlaceStone(x, y)"
               :class="['stone', 'preview', currentPlayer === 1 ? 'black' : 'white']"
             >
             </div>
             
-            <!-- 最后一步标记 -->
+            <!-- 最后一步标�?-->
             <div
               v-if="isLastMove(x, y)"
               class="last-move-marker"
             >
             </div>
             
-            <!-- AI建议标记 -->
-            <div
-              v-if="isAISuggestion(x, y)"
-              class="ai-suggestion-marker"
-              :title="getSuggestionInfo(x, y)"
-            >
-            </div>
+            <!-- AI建议标记（绿色半透明圆圈 + 序号�?-->
+            <template v-if="isAISuggestion(x, y)">
+              <div
+                class="ai-suggestion-marker"
+                :title="getSuggestionInfo(x, y)"
+              ></div>
+              <div
+                class="ai-suggestion-badge"
+              >{{ getSuggestionRank(x, y) }}</div>
+            </template>
           </div>
         </div>
       </div>
@@ -118,8 +121,12 @@ const gameStore = useGameStore()
 const gobanRef = ref(null)
 const hoveredCell = ref(null)
 
-// 确保board是响应式的
-const board = computed(() => gameStore.board)
+// 确保board是响应式�?const board = computed(() => gameStore.board)
+// 当前玩家
+const currentPlayer = computed(() => gameStore.currentPlayer)
+
+// 确保aiSuggestions是响应式�?const aiSuggestions = computed(() => gameStore.aiSuggestions)
+const showSuggestions = computed(() => gameStore.showSuggestions)
 
 // 棋盘尺寸
 const cellSize = 28
@@ -145,6 +152,8 @@ const boardStyle = computed(() => ({
 
 const gridColor = '#000'
 
+
+
 // 获取单元格样式
 const getCellStyle = (x, y) => ({
   width: `${cellSize}px`,
@@ -152,7 +161,7 @@ const getCellStyle = (x, y) => ({
   position: 'absolute',
   left: `${(y + 1) * cellSize - cellSize / 2}px`,
   top: `${(x + 1) * cellSize - cellSize / 2}px`,
-  cursor: canPlaceStone(x, y) ? 'pointer' : 'default'
+  cursor: canPlaceStone(x, y) ? 'pointer' : 'default',
 })
 
 // 检查是否可以落子
@@ -168,33 +177,78 @@ const isLastMove = (x, y) => {
 
 // 检查是否是AI建议
 const isAISuggestion = (x, y) => {
-  if (!gameStore.showSuggestions) return false
-  return gameStore.aiSuggestions.some(s => s.x === x && s.y === y)
+  if (!showSuggestions.value) {
+    return false
+  }
+  
+  const suggestions = aiSuggestions.value
+  if (!suggestions || !Array.isArray(suggestions) || suggestions.length === 0) {
+    return false
+  }
+  
+  // 检查该位置是否在建议列表中
+  const found = suggestions.some((s) => {
+    if (!s || typeof s !== 'object') return false
+    
+    // 转换坐标类型（确保是数字�?    const sx = typeof s.x === 'number' ? s.x : parseInt(s.x, 10)
+    const sy = typeof s.y === 'number' ? s.y : parseInt(s.y, 10)
+    
+    // 验证坐标有效性并匹配
+    if (isNaN(sx) || isNaN(sy)) return false
+    
+    return sx === x && sy === y
+  })
+  
+  return found
 }
 
 // 获取建议信息
 const getSuggestionInfo = (x, y) => {
-  const suggestion = gameStore.aiSuggestions.find(s => s.x === x && s.y === y)
+  const suggestions = aiSuggestions.value
+  if (!suggestions || !Array.isArray(suggestions)) return ''
+  
+  const suggestion = suggestions.find(s => {
+    if (!s || typeof s !== 'object') return false
+    const sx = typeof s.x === 'number' ? s.x : parseInt(s.x, 10)
+    const sy = typeof s.y === 'number' ? s.y : parseInt(s.y, 10)
+    return !isNaN(sx) && !isNaN(sy) && sx === x && sy === y
+  })
+  
   if (!suggestion) return ''
-  const rank = gameStore.aiSuggestions.indexOf(suggestion) + 1
-  return `AI建议 #${rank} (${(suggestion.score * 100).toFixed(1)}%)`
+  const rank = suggestions.indexOf(suggestion) + 1
+  const score = suggestion.score ? (suggestion.score * 100).toFixed(1) : '0.0'
+  return `AI建议 #${rank} (${score}%)`
 }
 
-// 处理单元格点击
-const handleCellClick = async (x, y) => {
+// 获取建议序号
+const getSuggestionRank = (x, y) => {
+  const suggestions = aiSuggestions.value
+  if (!suggestions || !Array.isArray(suggestions)) return ''
+  
+  const idx = suggestions.findIndex(s => {
+    if (!s || typeof s !== 'object') return false
+    const sx = typeof s.x === 'number' ? s.x : parseInt(s.x, 10)
+    const sy = typeof s.y === 'number' ? s.y : parseInt(s.y, 10)
+    return !isNaN(sx) && !isNaN(sy) && sx === x && sy === y
+  })
+  
+  return idx >= 0 ? idx + 1 : ''
+}
+
+// 处理单元格点击�?const handleCellClick = async (x, y) => {
   if (!gameStore.isConnected) {
     gameStore.error = '请先点击"连接AI"按钮'
-    console.warn('未连接AI，无法落子')
+    console.warn('未连接AI无法落子�?')
     return
   }
   
   if (gameStore.isThinking) {
-    console.warn('AI正在思考中，请稍候...')
+    console.warn('AI正在思考中..')
     return
   }
   
   if (gameStore.board[x][y] !== 0) {
-    console.warn('该位置已有棋子')
+    console.warn('该位置已有棋子?')
     return
   }
   
@@ -203,9 +257,9 @@ const handleCellClick = async (x, y) => {
     return
   }
   
-  console.log(`尝试在位置 (${x}, ${y}) 落子`)
+  console.log(`尝试在位置�?(${x}, ${y}) 落子`)
   await gameStore.makeMove(x, y)
-}
+
 
 // 处理悬停
 const handleCellHover = (x, y) => {
@@ -214,10 +268,9 @@ const handleCellHover = (x, y) => {
   }
 }
 
-// 响应式调整
-const resize = () => {
+// 响应式调�?const resize = () => {
   // 可以根据窗口大小调整棋盘尺寸
-}
+
 
 onMounted(() => {
   window.addEventListener('resize', resize)
@@ -305,16 +358,34 @@ onUnmounted(() => {
 
 .ai-suggestion-marker {
   position: absolute;
-  width: 6px;
-  height: 6px;
-  background: #007bff;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 255, 0, 0.4);
+  border: 2px solid rgba(0, 200, 0, 0.6);
   border-radius: 50%;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 1;
-  opacity: 0.7;
-  box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+  z-index: 2;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+}
+
+.ai-suggestion-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 200, 0, 0.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 10px;
+  z-index: 3;
+  box-shadow: 0 2px 6px rgba(0, 200, 0, 0.6);
+  border: 2px solid #fff;
 }
 
 .coordinates {
@@ -366,4 +437,3 @@ onUnmounted(() => {
   right: 6px;
 }
 </style>
-
