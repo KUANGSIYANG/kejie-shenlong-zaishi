@@ -16,7 +16,7 @@
 - **使用指南.md** - 围棋AI使用指南（如何使用训练好的模型）
 
 ### 前端项目
-- **sabaki-vue3-README.md** - Vue3前端项目说明（基于Sabaki的Vue3围棋前端）
+- **front-ksy-README.md** - Vue3前端项目说明（基于Sabaki的Vue3围棋前端，已更名为 front-ksy）
 
 ## 文档说明
 
