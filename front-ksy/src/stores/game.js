@@ -598,14 +598,14 @@ export const useGameStore = defineStore('game', {
       let whiteInfluence = 0
       
       if (this.influenceMap) {
-        for (let i = 0; i < 19; i++) {
-          for (let j = 0; j < 19; j++) {
-            const influence = this.influenceMap[i][j]
-            if (influence > 0) {
-              blackInfluence += influence
-            } else if (influence < 0) {
-              whiteInfluence += Math.abs(influence)
-            }
+      for (let i = 0; i < 19; i++) {
+        for (let j = 0; j < 19; j++) {
+          const influence = this.influenceMap[i][j]
+          if (influence > 0) {
+            blackInfluence += influence
+          } else if (influence < 0) {
+            whiteInfluence += Math.abs(influence)
+          }
           }
         }
       }

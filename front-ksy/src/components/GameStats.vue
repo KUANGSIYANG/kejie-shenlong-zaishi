@@ -55,7 +55,7 @@
       <div class="stat-divider" v-if="evaluation.winRate !== undefined"></div>
       
       <div class="stat-group" v-if="evaluation.winRate !== undefined">
-        <div class="stat-row">
+      <div class="stat-row">
           <span class="stat-label">黑方胜率:</span>
           <span class="stat-value black">
             {{ (blackWinRate * 100).toFixed(1) }}%

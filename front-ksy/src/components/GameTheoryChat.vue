@@ -886,7 +886,7 @@
           </p>
         </div>
         
-      <div v-if="moveHistory.length === 0" class="empty-state">
+        <div v-if="moveHistory.length === 0" class="empty-state">
           <p class="empty-message">暂无走子数据</p>
           <p class="empty-hint">请进行对局以生成走子质量分析</p>
         </div>
@@ -939,8 +939,8 @@
                 <div class="quality-label" v-if="(index + 1) % 5 === 0 || index === 0">
                   {{ index + 1 }}
                 </div>
+                </div>
               </div>
-            </div>
             </div>
           </div>
           
@@ -966,18 +966,18 @@
     </div>
   </template>
   
-<script setup>
+  <script setup>
 import { ref, computed, watch, watchEffect, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
-import { useGameStore } from '../stores/game'
+  import { useGameStore } from '../stores/game'
   
   const gameStore = useGameStore()
-const activeTab = ref('winrate')
+  const activeTab = ref('winrate')
 const useEcharts = ref(true)
-const winrateChartRef = ref(null)
-const valueChartRef = ref(null)
-const hoveredPoint = ref(null)
-const chartContainerRef = ref(null)
+  const winrateChartRef = ref(null)
+  const valueChartRef = ref(null)
+  const hoveredPoint = ref(null)
+  const chartContainerRef = ref(null)
 const winrateEchartRef = ref(null)
 const valueEchartRef = ref(null)
 const captureEchartRef = ref(null)
@@ -1016,7 +1016,7 @@ const qualityEchartRef = ref(null)
   const valueData = computed(() => gameStore.gameTheoryData.valueHistory || [])
   const captureData = computed(() => gameStore.gameTheoryData.captureHistory || [])
   const moveHistory = computed(() => gameStore.moveHistory || [])
-const evaluation = computed(() => gameStore.evaluation)
+  const evaluation = computed(() => gameStore.evaluation)
   const aiSuggestions = computed(() => gameStore.aiSuggestions || [])
 
 // ECharts 实例与渲染
@@ -2166,7 +2166,7 @@ watch(chartWidth, () => {
     background: var(--bg-primary);
     border-radius: 4px;
   padding: 8px 8px 8px 18px; /* 左侧留一列不可见的空白，避免内容贴边 */
-  overflow: hidden;
+    overflow: hidden;
     width: 100%;
     box-sizing: border-box;
     min-height: 250px;
@@ -2181,7 +2181,7 @@ watch(chartWidth, () => {
   height: 280px;
   min-height: 280px;
   display: block;
-}
+  }
   
   .chart-svg {
     display: block;
@@ -2200,20 +2200,20 @@ watch(chartWidth, () => {
     aspect-ratio: var(--chart-aspect-ratio, 320 / 250);
   }
   
-.nash-chart,
-.pareto-chart {
-  background: var(--bg-primary);
-  border-radius: 4px;
+  .nash-chart,
+  .pareto-chart {
+    background: var(--bg-primary);
+    border-radius: 4px;
   padding: 16px 12px 16px 32px; /* 左侧更多空列，确保轴文字不出界 */
-  width: 100%;
-  box-sizing: border-box;
+    width: 100%;
+    box-sizing: border-box;
   overflow: visible;            /* 允许内部元素完整显示 */
   min-height: 260px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
   
   .nash-chart .chart-svg,
   .pareto-chart .chart-svg {
