@@ -76,11 +76,11 @@
             <!-- AI建议标记（绿色半透明圆圈 + 序号） -->
             <template v-if="isAISuggestion(x, y)">
               <div
-                class="ai-suggestion-marker"
+                :class="['ai-suggestion-marker', `rank-${getSuggestionRank(x, y)}`]"
                 :title="getSuggestionInfo(x, y)"
               ></div>
               <div
-                class="ai-suggestion-badge"
+                :class="['ai-suggestion-badge', `rank-${getSuggestionRank(x, y)}`]"
               >{{ getSuggestionRank(x, y) }}</div>
             </template>
           </div>
@@ -301,11 +301,11 @@ const handleCellHover = (x, y) => {
 // 获取影响区域的样式（黑白透明）
 const getInfluenceStyle = (x, y, value) => {
   const baseStyle = getCellStyle(x, y)
-  
-  // 根据影响值设置透明度（0-0.4，增强可见性）
+
+  // 根据影响值设置透明度（0-0.45，增强可见性）
   const absValue = Math.abs(value)
-  const opacity = Math.min(absValue * 0.4, 0.4)
-  
+  const opacity = Math.min(absValue * 0.45 + 0.05, 0.45)
+
   // 如果影响值太小，不显示
   if (absValue < 0.1) {
     return {
@@ -313,18 +313,23 @@ const getInfluenceStyle = (x, y, value) => {
       display: 'none'
     }
   }
-  
+
   // 正值为黑方影响（黑色透明），负值为白方影响（白色透明）
-  const color = value > 0 
-    ? `rgba(0, 0, 0, ${opacity})`  // 黑色透明
-    : `rgba(255, 255, 255, ${opacity})`  // 白色透明
-  
+  const color =
+    value > 0
+      ? `rgba(0, 0, 0, ${opacity})`
+      : `rgba(255, 255, 255, ${opacity})`
+
   return {
     ...baseStyle,
     background: color,
     borderRadius: '50%',
     pointerEvents: 'none',
-    border: value > 0 ? '1px solid rgba(0, 0, 0, 0.3)' : '1px solid rgba(255, 255, 255, 0.3)',
+    border: value > 0 ? '1px solid rgba(0, 0, 0, 0.25)' : '1px solid rgba(255, 255, 255, 0.25)',
+    boxShadow:
+      value > 0
+        ? `0 0 12px rgba(0,0,0,${opacity})`
+        : `0 0 12px rgba(255,255,255,${opacity})`,
     width: `${cellSize}px`,
     height: `${cellSize}px`
   }
@@ -423,34 +428,65 @@ onUnmounted(() => {
 
 .ai-suggestion-marker {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  background: rgba(0, 255, 0, 0.4);
-  border: 2px solid rgba(0, 200, 0, 0.6);
+  width: 22px;
+  height: 22px;
+  background: radial-gradient(circle, rgba(92,214,195,0.55) 0%, rgba(92,214,195,0.18) 70%, rgba(92,214,195,0) 100%);
+  border: 2px solid rgba(92, 214, 195, 0.85);
   border-radius: 50%;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 2;
-  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+  box-shadow: 0 0 10px rgba(92, 214, 195, 0.7), 0 0 18px rgba(122, 167, 255, 0.35);
+  animation: pulse-marker 1.6s ease-in-out infinite;
+}
+
+.ai-suggestion-marker.rank-1 {
+  background: radial-gradient(circle, rgba(92,214,195,0.75) 0%, rgba(92,214,195,0.3) 70%, rgba(92,214,195,0) 100%);
+  border-color: rgba(92, 214, 195, 0.95);
+}
+
+.ai-suggestion-marker.rank-2 {
+  background: radial-gradient(circle, rgba(92,214,195,0.6) 0%, rgba(92,214,195,0.2) 70%, rgba(92,214,195,0) 100%);
+  border-color: rgba(92, 214, 195, 0.7);
+}
+
+.ai-suggestion-marker.rank-3 {
+  background: radial-gradient(circle, rgba(92,214,195,0.45) 0%, rgba(92,214,195,0.14) 70%, rgba(92,214,195,0) 100%);
+  border-color: rgba(92, 214, 195, 0.55);
 }
 
 .ai-suggestion-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  background: rgba(0, 200, 0, 0.9);
-  color: #fff;
+  top: -9px;
+  right: -9px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  background: linear-gradient(135deg, #5cd6c3, #5cd6c3);
+  color: #0b111d;
   font-size: 12px;
   font-weight: bold;
-  line-height: 20px;
+  line-height: 22px;
   text-align: center;
-  border-radius: 10px;
+  border-radius: 12px;
   z-index: 3;
-  box-shadow: 0 2px 6px rgba(0, 200, 0, 0.6);
-  border: 2px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}
+
+.ai-suggestion-badge.rank-2 {
+  background: linear-gradient(135deg, rgba(92,214,195,0.85), rgba(92,214,195,0.75));
+}
+
+.ai-suggestion-badge.rank-3 {
+  background: linear-gradient(135deg, rgba(92,214,195,0.7), rgba(92,214,195,0.6));
+}
+
+@keyframes pulse-marker {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.85; }
+  50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.85; }
 }
 
 .coordinates {

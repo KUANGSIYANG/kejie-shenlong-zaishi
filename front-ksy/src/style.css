@@ -1,16 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap');
+
 :root {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2a2a2a;
-  --bg-tertiary: #3a3a3a;
-  --text-primary: #e0e0e0;
-  --text-secondary: #a0a0a0;
-  --border-color: #444;
-  --accent-color: #4a9eff;
+  --bg-primary: #0c0f1a;
+  --bg-secondary: #111628;
+  --bg-tertiary: #1c2237;
+  --bg-glow: radial-gradient(circle at 20% 20%, rgba(82, 145, 255, 0.08), transparent 32%),
+    radial-gradient(circle at 80% 0%, rgba(36, 207, 170, 0.12), transparent 34%),
+    radial-gradient(circle at 60% 70%, rgba(255, 215, 141, 0.08), transparent 30%);
+  --text-primary: #e8ecf7;
+  --text-secondary: #9eabc8;
+  --text-muted: #6d7895;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --accent-color: #5cd6c3;
+  --accent-strong: #7aa7ff;
+  --danger: #ff6b6b;
+  --success: #54e69d;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   padding: 0;
   background: var(--bg-primary);
+  background-image:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 38%),
+    var(--bg-glow);
   color: var(--text-primary);
+  font-family: 'Space Grotesk', 'Noto Sans SC', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.1px;
+  min-height: 100vh;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+}
+
+.subtle-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-color) rgba(255, 255, 255, 0.06);
+}
+
+.subtle-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.subtle-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.subtle-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent-color));
+  border-radius: 999px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  font-size: 12px;
+  border: 1px solid var(--border-color);
 }

@@ -1,6 +1,5 @@
 /**
- * GTP协议客户端
- * 通过HTTP API与后端GTP服务通信
+ * 简易 GTP 客户端，通过 HTTP 与后端 GTP 服务通信
  */
 
 class GTPClient {
@@ -17,7 +16,7 @@ class GTPClient {
         data = await response.json()
       } catch (err) {
         const txt = await response.text()
-        console.error('无法解析JSON响应，返回文本：', txt)
+        console.error('无法解析 JSON 响应，返回文本：', txt)
         data = { success: false, error: txt || 'Invalid JSON response' }
       }
     } else {
@@ -28,7 +27,7 @@ class GTPClient {
         try {
           data = JSON.parse(txt)
         } catch (err) {
-          console.error('非JSON响应文本：', txt)
+          console.error('非 JSON 响应文本:', txt)
           data = { success: false, error: txt }
         }
       }
@@ -47,14 +46,14 @@ class GTPClient {
       if (data && data.sessionId) this.sessionId = data.sessionId
       return data
     } catch (error) {
-      console.error('GTP初始化失败：', error)
+      console.error('GTP 初始化失败:', error)
       throw error
     }
   }
 
   async sendCommand(command) {
     if (!this.sessionId) {
-      throw new Error('GTP会话未初始化')
+      throw new Error('GTP 会话未初始化')
     }
     try {
       const response = await fetch(`${this.baseURL}/gtp/command`, {
@@ -68,7 +67,7 @@ class GTPClient {
       const data = await this._parseResponse(response)
       return data
     } catch (error) {
-      console.error('GTP命令执行失败:', error)
+      console.error('GTP 命令执行失败:', error)
       throw error
     }
   }
@@ -79,13 +78,13 @@ class GTPClient {
   }
 
   async genmove(color) {
-    console.log(`[GTP Client] 发送genmove命令: ${color}`)
+    console.log(`[GTP Client] 发送 genmove 命令: ${color}`)
     try {
       const result = await this.sendCommand(`genmove ${color}`)
-      console.log(`[GTP Client] genmove响应:`, result)
+      console.log(`[GTP Client] genmove 响应:`, result)
       return result
     } catch (error) {
-      console.error(`[GTP Client] genmove失败:`, error)
+      console.error(`[GTP Client] genmove 失败:`, error)
       throw error
     }
   }
@@ -96,7 +95,7 @@ class GTPClient {
 
   async getSuggestions(color = 'B', topN = 5) {
     if (!this.sessionId) {
-      throw new Error('GTP会话未初始化')
+      throw new Error('GTP 会话未初始化')
     }
     try {
       const response = await fetch(`${this.baseURL}/gtp/suggestions`, {
@@ -115,14 +114,14 @@ class GTPClient {
       const data = await this._parseResponse(response)
       return data
     } catch (error) {
-      console.error('[GTP Client] 获取AI建议失败:', error)
+      console.error('[GTP Client] 获取 AI 建议失败:', error)
       throw error
     }
   }
 
   async getEvaluation(color = 'B') {
     if (!this.sessionId) {
-      throw new Error('GTP会话未初始化')
+      throw new Error('GTP 会话未初始化')
     }
     try {
       const response = await fetch(`${this.baseURL}/gtp/eval`, {
@@ -148,7 +147,7 @@ class GTPClient {
         })
         await this._parseResponse(response)
       } catch (error) {
-        console.error('关闭GTP会话失败:', error)
+        console.error('关闭 GTP 会话失败:', error)
       }
       this.sessionId = null
     }

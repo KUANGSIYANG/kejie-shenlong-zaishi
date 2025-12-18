@@ -1,16 +1,22 @@
 <template>
-  <div class="app-container">
-    <MainMenu />
-    <div class="main-content">
-      <LeftSidebar />
+  <div class="app-shell">
+    <div class="background-glow"></div>
+    <MainMenu :active-page="activePage" @switch-page="handleSwitchPage" />
+
+    <div v-if="activePage === 'board'" class="main-content">
+      <LeftSidebar class="panel glass subtle-scrollbar" />
       <MainView />
-      <div class="theory-panel" :class="{ collapsed: !showTheoryPanel }">
+      <div class="theory-panel panel glass" :class="{ collapsed: !showTheoryPanel }">
         <button class="toggle-btn" @click="toggleTheoryPanel">
-          {{ showTheoryPanel ? '‹' : '›' }}
+          {{ showTheoryPanel ? '收起' : '展开' }}
         </button>
         <GameTheoryChart v-if="showTheoryPanel" />
       </div>
-      <RightSidebar />
+      <RightSidebar class="panel glass subtle-scrollbar" />
+    </div>
+
+    <div v-else class="lab-content">
+      <GameTheoryLab @back="handleSwitchPage('board')" />
     </div>
   </div>
 </template>
@@ -22,83 +28,96 @@ import MainView from './components/MainView.vue'
 import LeftSidebar from './components/LeftSidebar.vue'
 import RightSidebar from './components/RightSidebar.vue'
 import GameTheoryChart from './components/GameTheoryChat.vue'
+import GameTheoryLab from './pages/GameTheoryLab.vue'
 
 const showTheoryPanel = ref(true)
+const activePage = ref('board')
+
 const toggleTheoryPanel = () => {
   showTheoryPanel.value = !showTheoryPanel.value
 }
+
+const handleSwitchPage = (page) => {
+  activePage.value = page
+}
 </script>
 
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #1a1a1a;
-  color: #e0e0e0;
+<style scoped>
+.app-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   overflow: hidden;
 }
 
-.app-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
+.background-glow {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-glow);
+  pointer-events: none;
+  opacity: 0.65;
+  z-index: 0;
 }
 
 .main-content {
+  position: relative;
   display: flex;
   flex: 1;
-  overflow: hidden;
+  gap: 12px;
+  padding: 16px 16px 20px;
   min-height: 0;
+  z-index: 1;
+}
+
+.lab-content {
+  position: relative;
+  flex: 1;
+  z-index: 1;
+  padding: 12px 16px 20px;
 }
 
 .theory-panel {
   width: 360px;
   min-width: 320px;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
-  padding: 10px 10px 10px 18px;
-  margin-left: 12px;
+  padding: 14px 14px 14px 20px;
+  margin-left: 4px;
   position: relative;
-  transition: width 0.2s ease, min-width 0.2s ease, margin-left 0.2s ease;
+  transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease;
   display: flex;
   flex-direction: column;
   overflow: visible;
 }
 
 .theory-panel.collapsed {
-  width: 28px;
-  min-width: 28px;
-  padding: 10px 4px;
-  margin-left: 12px;
+  width: 34px;
+  min-width: 34px;
+  padding: 12px 6px;
+  justify-content: center;
+  align-items: center;
 }
 
 .toggle-btn {
   position: absolute;
-  left: -18px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 22px;
-  height: 22px;
-  border-radius: 11px;
+  left: -11px;
+  top: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
   border: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
   color: var(--text-primary);
   cursor: pointer;
   font-size: 12px;
   line-height: 20px;
   padding: 0;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 10;
+  transition: all 0.2s;
 }
 
 .toggle-btn:hover {
-  background: var(--bg-secondary);
+  transform: translateY(-1px);
+  border-color: var(--accent-color);
 }
 </style>

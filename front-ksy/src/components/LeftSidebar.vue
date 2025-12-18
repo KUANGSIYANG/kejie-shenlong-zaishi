@@ -1,19 +1,26 @@
 <template>
   <div class="left-sidebar">
-    <h3>游戏树</h3>
-    <div class="game-tree">
+    <div class="header">
+      <div>
+        <p class="eyebrow">对局回放</p>
+        <h3>Move Timeline</h3>
+      </div>
+      <span class="badge" v-if="moveHistory.length === 0">暂无落子</span>
+    </div>
+
+    <div class="game-tree subtle-scrollbar">
       <div v-if="moveHistory.length === 0" class="empty-tree">
         暂无走子记录
       </div>
       <div v-else class="tree-content">
-        <div 
-          v-for="(move, index) in moveHistory" 
+        <div
+          v-for="(move, index) in moveHistory"
           :key="`move-${index}`"
           class="tree-node"
           :class="{ active: index === moveHistory.length - 1 }"
           @click="goToMove(index)"
         >
-          <div class="move-number">{{ index + 1 }}</div>
+          <div class="move-number">#{{ index + 1 }}</div>
           <div class="move-info">
             <div class="move-color" :class="move.color === 1 ? 'black' : 'white'">
               {{ move.color === 1 ? '黑' : '白' }}
@@ -26,25 +33,35 @@
         </div>
       </div>
     </div>
-    
+
     <div class="tree-controls">
-      <button @click="goToFirst" :disabled="currentMoveIndex === 0">⏮</button>
-      <button @click="goToPrev" :disabled="currentMoveIndex === 0">⏪</button>
-      <span class="move-counter">{{ currentMoveIndex + 1 }} / {{ moveHistory.length }}</span>
-      <button @click="goToNext" :disabled="currentMoveIndex >= moveHistory.length - 1">⏩</button>
-      <button @click="goToLast" :disabled="currentMoveIndex >= moveHistory.length - 1">⏭</button>
+      <button @click="goToFirst" :disabled="moveHistory.length === 0 || currentMoveIndex === 0">|<</button>
+      <button @click="goToPrev" :disabled="moveHistory.length === 0 || currentMoveIndex === 0"><</button>
+      <span class="move-counter">
+        {{ moveHistory.length === 0 ? '0 / 0' : `${currentMoveIndex + 1} / ${moveHistory.length}` }}
+      </span>
+      <button @click="goToNext" :disabled="moveHistory.length === 0 || currentMoveIndex >= moveHistory.length - 1">></button>
+      <button @click="goToLast" :disabled="moveHistory.length === 0 || currentMoveIndex >= moveHistory.length - 1">>|</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 
 const gameStore = useGameStore()
-const currentMoveIndex = ref(-1)
+const currentMoveIndex = ref(0)
 
 const moveHistory = computed(() => gameStore.moveHistory)
+
+watch(
+  moveHistory,
+  (list) => {
+    currentMoveIndex.value = list.length > 0 ? list.length - 1 : 0
+  },
+  { immediate: true }
+)
 
 const coordToGTP = (x, y) => {
   const letters = 'ABCDEFGHJKLMNOPQRST'
@@ -65,7 +82,6 @@ const getMoveEval = (index) => {
 
 const goToMove = (index) => {
   currentMoveIndex.value = index
-  // 这里可以添加回退到指定步数的功能
 }
 
 const goToFirst = () => {
@@ -93,25 +109,47 @@ const goToLast = () => {
 .left-sidebar {
   width: 280px;
   min-width: 250px;
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
   padding: 16px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 h3 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--text-primary);
-  font-weight: 600;
+  margin: 2px 0 0 0;
+  font-size: 15px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 11px;
 }
 
 .game-tree {
   flex: 1;
   overflow-y: auto;
+  max-height: calc(100vh - 240px);
+  padding-right: 4px;
 }
 
 .empty-tree {
@@ -119,51 +157,49 @@ h3 {
   color: var(--text-secondary);
   font-size: 12px;
   padding: 40px 20px;
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
 }
 
 .tree-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .tree-node {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: var(--bg-primary);
-  border-radius: 4px;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-color);
 }
 
 .tree-node:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--border-color);
+  border-color: var(--accent-color);
+  transform: translateX(2px);
 }
 
 .tree-node.active {
-  background: var(--accent-color);
+  background: linear-gradient(135deg, rgba(92, 214, 195, 0.16), rgba(122, 167, 255, 0.14));
   border-color: var(--accent-color);
   color: white;
 }
 
 .move-number {
-  width: 24px;
-  height: 24px;
+  min-width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-tertiary);
-  border-radius: 50%;
-  font-size: 11px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: bold;
-}
-
-.tree-node.active .move-number {
-  background: rgba(255, 255, 255, 0.2);
 }
 
 .move-info {
@@ -174,25 +210,26 @@ h3 {
 }
 
 .move-color {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
 }
 
 .move-color.black {
-  background: #333;
+  background: #1c1c1c;
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .move-color.white {
-  background: #fff;
+  background: #f0f0f0;
   color: #333;
-  border: 1px solid #aaa;
+  border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .move-position {
@@ -201,11 +238,12 @@ h3 {
 }
 
 .move-eval {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-secondary);
-  padding: 2px 6px;
-  background: var(--bg-tertiary);
-  border-radius: 3px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .tree-controls {
@@ -213,34 +251,34 @@ h3 {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px;
-  background: var(--bg-primary);
-  border-radius: 4px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
 }
 
 .tree-controls button {
-  padding: 4px 8px;
-  background: var(--bg-tertiary);
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 12px;
   transition: all 0.2s;
 }
 
 .tree-controls button:hover:not(:disabled) {
-  background: var(--bg-primary);
   border-color: var(--accent-color);
 }
 
 .tree-controls button:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .move-counter {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-secondary);
   padding: 0 8px;
 }
